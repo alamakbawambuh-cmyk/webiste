@@ -66,27 +66,34 @@
 
       if (!files.length) return alert("Pilih file dulu!");
 
-      const vercelToken = "k96BSogpNFel7OCzHfaaTYZf"; // 🔑 ganti token kamu
+      // 🧩 Ganti ini dengan token kamu sendiri
+      const vercelToken = "k96BSogpNFel7OCzHfaaTYZf";
 
-      // Baca semua file & ubah ke Base64
+      // 🔹 Baca semua file (bukan base64)
       const fileList = await Promise.all([...files].map(file => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => {
-            const base64data = reader.result.split(',')[1];
-            resolve({ file: file.name, data: base64data });
+            // hasilnya text mentah / binary string
+            const fileData = reader.result;
+            resolve({ file: file.name, data: fileData });
           };
           reader.onerror = reject;
-          reader.readAsDataURL(file);
+
+          // Baca sebagai teks kalau text-based, kalau binary pakai ArrayBuffer
+          if (file.type.startsWith("text/") || file.name.endsWith(".html") || file.name.endsWith(".css") || file.name.endsWith(".js")) {
+            reader.readAsText(file);
+          } else {
+            reader.readAsBinaryString(file);
+          }
         });
       }));
 
-      // Tambahkan projectSettings biar gak error
       const payload = {
         name: projectName,
         files: fileList,
         projectSettings: {
-          framework: null,     // bisa juga "static"
+          framework: null,
           buildCommand: null,
           outputDirectory: null
         }
